@@ -14,7 +14,7 @@ const Home = () => {
             </Grid.Row>
             <Grid.Row>
                 {loading ? (
-                    <h1>Loading post...</h1>
+                    <h1>Loading all post...</h1>
                 ): (
                     posts && posts.map(post => (
                         <Grid.Column key={post.id} style={{marginBottom: 20}}>
