@@ -21,7 +21,7 @@ function Login(props) {
       props.history.push('/');
     },
     onError(err) {
-      setErrors(err.graphQLErrors[0].extensions.exception.errors);
+      setErrors(err);
     },
     variables: values
   });
