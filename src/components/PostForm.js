@@ -1,7 +1,7 @@
 import { gql, useMutation } from '@apollo/client/'
 import { Button, Form } from 'semantic-ui-react'
 import {useForm} from '../utils/hooks'
-
+import { POST_QUERY } from '../utils/graphql'
 const PostForm = () => {
     const createPostCallBack = () => {
         createPost()
@@ -12,13 +12,18 @@ const PostForm = () => {
 
     const [createPost, {error}] = useMutation(CREATE_POST_MUTATION, {
         variables: values,
-        update(_, result){
-            console.log(result)
+        update(proxy, result){
+            const data = proxy.readQuery({
+                query: POST_QUERY
+            })
+            data.getPosts = [result.data.createPost, ...data.getPosts]
+            proxy.writeQuery({ query: POST_QUERY, data})
             values.body=''
         }
     })
 
     return(
+        <>
         <Form onSubmit={onSubmit}>
             <h2>Create a post:</h2>
             <Form.Field>
@@ -27,12 +32,21 @@ const PostForm = () => {
                     name="body"
                     onChange={onChange}
                     value={values.body}
+                    error={error ? true : false}
                 />
                 <Button type="submit" color="orange">
                     Submit
                 </Button>
             </Form.Field>
         </Form>
+        {error && (
+            <div className="ui error message">
+                <ul className="list">
+                <li>{error.graphQLErrors[0].message}</li>
+            </ul>
+            </div>
+        )}
+        </>
     )
 }
 
