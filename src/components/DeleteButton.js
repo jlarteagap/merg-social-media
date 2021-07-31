@@ -3,21 +3,27 @@ import { useMutation, gql } from '@apollo/client'
 import { useState } from 'react'
 import { POST_QUERY } from '../utils/graphql'
 
-const DeleteButton = ({postId, callback}) => {
+const DeleteButton = ({postId, commentId, callback}) => {
     const [confirmOpen, setConfirmOpen] = useState(false)
-    const [deletePost] = useMutation(DELETE_POST,{
-        update(proxy){
-            setConfirmOpen(false)
-            const data = proxy.readQuery({
-                query: POST_QUERY
-            })
 
-            data.getPosts = data.getPosts.filter(p => p.id !== postId)
-            proxy.writeQuery({ query: POST_QUERY, data})
+    const mutation = commentId ? DELETE_COMMENT: DELETE_POST
+
+    const [deletePostOrComment] = useMutation(mutation,{
+        update(proxy){
+            if(!commentId){
+                setConfirmOpen(false)
+                const data = proxy.readQuery({
+                    query: POST_QUERY
+                })
+
+                data.getPosts = data.getPosts.filter(p => p.id !== postId)
+                proxy.writeQuery({ query: POST_QUERY, data})
+            }
             if(callback) callback()
         },
         variables: {
-            postId
+            postId,
+            commentId
         }
     })
     return(
@@ -28,7 +34,7 @@ const DeleteButton = ({postId, callback}) => {
         <Confirm 
             open = {confirmOpen} 
             onCancel={() => setConfirmOpen(false)}
-            onConfirm={deletePost} />
+            onConfirm={deletePostOrComment} />
         </>
     )
 }
@@ -36,6 +42,17 @@ const DeleteButton = ({postId, callback}) => {
 const DELETE_POST = gql`
     mutation deletePost($postId: ID!){
         deletePost(postId: $postId)
+    }
+`
+
+const DELETE_COMMENT = gql`
+    mutation deleteComment($postId: ID!, $commentId: ID!){
+        deleteComment(postId: $postId, commentId: $commentId){
+            id
+            comments{
+                id username createdAt body
+            }
+        }
     }
 `
 export default DeleteButton
